@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,10 +20,18 @@ public class User {
     @Id                                             // PK
     @GeneratedValue(strategy = GenerationType.AUTO) // AI
     private Long id;
+    @Email (message = "błędny email")
+    @NotBlank (message = "wpisz coś")
     private String email;
+    @NotBlank (message = "wpisz hasło")
+    @Size(min = 3, message = "hasło musi być dłuższe niż 3 znaki")
     private String password;
     private LocalDateTime register_date = LocalDateTime.now();
     private boolean activity = false;
+    @Transient //pomija dane pole w bazie danych
+    @NotBlank (message = "wpisz to samo co powyżej")
+    @Size (min = 3, message = "hasło musi być dłuższe niż 3 znaki")
+    private String password_confirm;
 
     public User(String email, String password) {
         this.email = email;
