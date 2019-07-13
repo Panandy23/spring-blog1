@@ -1,15 +1,22 @@
 package pl.sda.mysimpleblog.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import pl.sda.mysimpleblog.model.Comment;
 import pl.sda.mysimpleblog.model.Post;
 import pl.sda.mysimpleblog.model.User;
+import pl.sda.mysimpleblog.model.enums.CategoryEnum;
 import pl.sda.mysimpleblog.repository.CommentRepository;
 import pl.sda.mysimpleblog.repository.PostsRepository;
 import pl.sda.mysimpleblog.repository.UserRepository;
 
 import java.util.List;
+import java.util.Set;
+
 @Service
 public class PostsService {
     PostsRepository postsRepository;
@@ -23,26 +30,34 @@ public class PostsService {
     }
 
     public List<Post> getAllPosts(){
-        return postsRepository.findAll();
+
+                return postsRepository.findAll(Sort.by("id").descending());
     }
+
+
     public Post getPostById(Long post_id){
         if(postsRepository.findById(post_id).isPresent()) {
             return postsRepository.getOne(post_id);
         }
         return new Post();
     }
-    public void addComment(Comment comment, Long post_id, Long user_id){
-        User user = userRepository.getOne(user_id);
+    public void addComment(Comment comment, Long post_id, Authentication auth){
+        if(auth != null) {
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            String loggedEmail = userDetails.getUsername();
+            comment.setUser(userRepository.getByEmail(loggedEmail));
+        }
         Post post = postsRepository.getOne(post_id);
         comment.setPost(post);
-        comment.setUser(user);
         commentRepository.save(comment);
     }
-    public void savePost(Post post){
-        post.setUser(userRepository.getOne(4L));
+    public void savePost(Post post, String email){
+        User user = userRepository.getByEmail(email);
+        post.setUser(user);
         postsRepository.save(post);
     }
     public void deletePost(Long post_id){
+
         postsRepository.deleteById(post_id);
     }
     public void updatePost(Long post_id, Post updatedPost){
@@ -54,6 +69,41 @@ public class PostsService {
         postsRepository.save(post);
     }
 
+public boolean isAdmin (UserDetails userDetails){
+        Set<GrantedAuthority> authorities = (Set<GrantedAuthority>) userDetails.getAuthorities();
+        if(authorities.toString().contains("ROLE_ADMIN")){
+            return true;
+        }
+        return false;
+}
 
+    public void deleteComment(Long comment_id) {
+        commentRepository.deleteById(comment_id);
+    }
 
+    public Long getPostByCommentId(Long comment_id) {
+        Comment comment = commentRepository.getOne(comment_id);
+        return comment.getPost().getId();
+    }
+
+    public void likePost (Long post_id){
+
+        Post post = postsRepository.getOne(post_id);
+        post.setLike1(post.getLike1()+1);
+        postsRepository.save(post);
+
+    }
+
+    public void dislikePost (Long post_id){
+
+        Post post = postsRepository.getOne(post_id);
+        post.setDislike(post.getDislike()+1);
+        postsRepository.save(post);
+
+    }
+
+    public List<Post> filterByCategory(CategoryEnum category) {
+        return postsRepository.findAllByCategory(category);
+
+    }
 }

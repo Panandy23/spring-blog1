@@ -27,7 +27,7 @@ public class User {
     @Size(min = 3, message = "hasło musi być dłuższe niż 3 znaki")
     private String password;
     private LocalDateTime register_date = LocalDateTime.now();
-    private boolean activity = false;
+    private boolean activity = true;
     @Transient //pomija dane pole w bazie danych
     @NotBlank (message = "wpisz to samo co powyżej")
     @Size (min = 3, message = "hasło musi być dłuższe niż 3 znaki")
@@ -48,5 +48,12 @@ public class User {
     // metoda do aktualizacji ról użtrkownika
     public void addRole(Role role){
         this.roles.add(role);
+
     }
+
+    public void subRole(Role role){
+        this.roles.remove(role);
+    }
+
+
 }

@@ -6,4 +6,5 @@ import pl.sda.mysimpleblog.model.Comment;
 
 @Repository
 public interface CommentRepository extends JpaRepository<Comment,Long> {
+
 }
